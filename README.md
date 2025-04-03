@@ -1,43 +1,92 @@
-# CS 350 Starter Code Pack
+# **Assignment 2 - Bank Transactions**
 
-This repository will be updated periodically to release new assignments.
+**Due Date: Fri, 9 Feb, 2024**
 
-## Project 1 : Weather Stations
+Please make sure to regularly commit and push your work to Gitlab so that we can see your progress. _Final submission will be on Gradescope_ – this will be the **only** source of truth for grading.
 
-Please navigate to [ws](/ws/) directory for detailed instructions regarding Weather Stations assignment.
+There will be no late submission and no extensions, so make sure to submit on time.
 
-## Project 2 : Bank Transactions
+## **Introduction**
 
-Please navigate to `bank` directory for detailed instructions regarding Bank Transactions assignment.
+Correctness of data is very important in real world applications such as banking. An ideal bank should be able to handle millions of requests for various accounts simultaneously, whilst ensuring that all user data is correct.
 
-## Project 3 : MapReduce
+Some common tasks that all banking applications have to handle are:
 
-Please navigate to `mr` directory for detailed instructions regarding MapReduce assignment.
+- Create account
+- Deposit funds
+- Withdraw funds
+- Transfer funds
 
-## Guidelines
+In this assignment, you are given a codebase with some parts of a banking application implemented. Some parts of the code are not implemented and some might be buggy. Your task is to implement the missing code, and fix any possible bugs in the code.
 
-### Submission
+## **Code Overview and Objectives**
 
-Please commit and push to gitlab frequently so that we can see your progress. Additionally, please **submit your final code to gradescope** before the deadline of each assignment. This ensures fairness for all and provides a consistent testing environment. Gradescope test results will be the **only** source of truth for grading programming assignments.
+All code for this assignment resides in bank.go
 
-### Testing
+You are provided with the following structs for defining a bank and accounts within it:
 
-Please keep in mind that due to the nature of distributed systems (especially Raft, where there's explicit randomness), your code may work in some cases and not in others. You should run the test multiple times.
+```go
+type Bank struct {
+	bankLock *sync.RWMutex
+	accounts map[int]*Account
+}
 
-The test scripts test your code with Go's race detector, which doesn't have false positives. When it emits a warning, it **always** means that a race condition occurred.
+type Account struct {
+	balance int
+	lock    *sync.Mutex
+}
+```
 
-### Logging
+You need to ensure that the following methods are implemented correctly:
 
-Logging is useful as a simple debug method, even more so in a distributed environment where single-stepping simply isn't possible. During testing your code may produce _a lot_ of logs, potentially flooding the terminal. You can always redirect the output to disk by `./some-binary > out.log`, or use the `log` package. You may also look into industry practices like `logrus` or `glog`, which offer more advanced logging features.
+- CreateAccount()
+- Deposit()
+- Withdraw()
+- Transfer()
+- **\[BONUS!\]** DepositAndCompare()
 
-### Windows Users (WSL)
+Your code’s execution should be **deterministic.** The tester will make a huge number of concurrent calls to your code, and running the exact same input multiple times should not affect the final state of the Bank or any of the Accounts within it.
 
-On the newer Windows builds, WSL2 does _not_ require the hyperV extension and is at most times fully compatible with your system. Using WSL2 is recommended over WSL1, which is no longer under active development.
+Your code should also be able to handle errors such as handling account ids that dont exist or are being duplicated by throwing an error. In such cases, your code needs to log appropriate error messages.
 
-Please use `wsl` _even when cloning the repo_. Windows default line breakers `\n\r` breaks the bash scripts for testing. If you did clone on native Windows and ran into bash problems, use `dos2unix` to convert the bash file back to unix format.
+### **DPrintf**
 
-Please clone into `wsl`'s native directory instead of into mounted Windows drives (e.g. `/mnt/c/users/NAME/Desktop` as seen in ubuntu's terminal). WSL has I/O performance issues with mounted windows drives and **this is known to fail the `mr` tests** even for fast storage devices.
+We also provide you with a function called DPrintf(). It is similar to Printf, but you can set
 
-### .gitignore
+```go
+const Debug = false
+```
 
-Please make use of the `.gitignore` file and avoid tracking unnecessary files (e.g. intermediate files from map-reduce).
+to disable the DPrintf() statements, which may help you debug your code.
+
+It is set to true by default. Using DPrintf is optional, but recommended for ease of coding.
+
+## **Instructions**
+
+1. Clone the repository and navigate to the bank directory.
+2. Put your code in the appropriate methods/files.
+3. Run the tests
+   1. go test -v -race
+   2. You should ensure that you the entire test suite works multiple times, ie. try running the tests at least 5 times successfully.
+4. Upload the bank.go file to Gradescope. Do not change the file name, or the autograder may not recognize it.
+
+Your output should be something like this
+
+```
+go test -v -race
+
+=== RUN   TestCreateAccountBasic
+--- PASS: TestCreateAccountBasic (0.00s)
+=== RUN   TestCreateAccountMany
+--- PASS: TestCreateAccountMany (0.00s)
+=== RUN   TestManyDepositsAndWithdraws
+--- PASS: TestManyDepositsAndWithdraws (3.57s)
+=== RUN   TestFewTransfers
+--- PASS: TestFewTransfers (0.00s)
+=== RUN   TestManyTransfers
+--- PASS: TestManyTransfers (0.00s)
+=== RUN   TestDepositAndCompare
+--- PASS: TestDepositAndCompare (0.01s)
+PASS
+ok  	cs350/bank-transactions	4.771s
+```
